@@ -1,0 +1,76 @@
+body {
+	margin: 0;
+	overflow-y: hidden;
+}
+
+#content {
+	width: 80%;
+	height: 100%;
+	float: left;
+}
+
+#sidebar {
+	width: 20%;
+	height: 100%;
+	float: left;
+	position: relative;
+}
+
+#logo {
+	height: 48px;
+	background: #82c458;
+}
+
+#sidebar-content {
+    top: 48px;
+    bottom: 0;
+	position: absolute;
+	width: 100%;
+    overflow: auto;
+	background: #fafcff;
+}
+
+#messages {
+	background: #8B9AA9;
+	width: 100%;
+	height: 80%;
+    overflow: auto;
+}
+
+#input-box {
+	background: white;
+	width: 100%;
+	height: 20%;
+    overflow: auto;
+}
+
+#submit {
+	position: fixed;
+	bottom: 2px;
+	right: 50px;
+}
+
+.button {
+	border: 4px solid #304ffe;
+	color: white;
+	background: #304ffe;
+	padding: 6px 12px;
+}
+
+.button:hover {
+	background: white;
+	color: #304ffe;
+}
+
+.button:active {
+	color: #fff;
+	background: #304ffe;
+	box-shadow: 1px 2px 7px rgba(0, 0, 0, 0.3) inset;
+}
+
+#toolbar {
+	float: right;
+	height: 100%;
+	width: 48px;
+	background: blue;
+}
