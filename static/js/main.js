@@ -49,7 +49,17 @@ window.onload = function() {
 
     socket.onmessage = function(e) {
         console.log(e.data);
-        msgBox.innerHTML += marked(e.data);
+        var data = JSON.parse(e.data);
+        var msg = document.createElement("div");
+        msg.innerHTML = marked(data["msg"]);
+
+        // 高亮代码块
+        var codeBlocks = msg.getElementsByTagName("pre");
+        for (var i = 0; i < codeBlocks.length; i++) {
+            hljs.highlightBlock(codeBlocks[i]);
+        }
+
+        msgBox.appendChild(msg);
         // 滚动到底部
         msgBox.scrollTop = msgBox.scrollHeight;
     };

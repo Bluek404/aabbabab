@@ -15,5 +15,5 @@ func Index() []byte {
 func head(_buffer *bytes.Buffer, title string) {
 	_buffer.WriteString("<head><meta charset=\"utf-8\"><title>")
 	_buffer.WriteString(title)
-	_buffer.WriteString("</title><link href=\"./static/css/main.css\" media=\"all\" rel=\"stylesheet\"><script type=\"text/javascript\" charset=\"utf-8\" src=\"./static/js/main.js\"></script><script type=\"text/javascript\" charset=\"utf-8\" src=\"./static/js/marked.js\"></script></head>")
+	_buffer.WriteString("</title><link href=\"./static/css/main.css\" media=\"all\" rel=\"stylesheet\"><link href=\"./static/css/monokai_sublime.css\" media=\"all\" rel=\"stylesheet\"><script type=\"text/javascript\" charset=\"utf-8\" src=\"./static/js/main.js\"></script><script type=\"text/javascript\" charset=\"utf-8\" src=\"./static/js/marked.js\"></script><script type=\"text/javascript\" charset=\"utf-8\" src=\"./static/js/highlight.pack.js\"></script></head>")
 }

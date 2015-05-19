@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"io"
 	"log"
 	"net/http"
@@ -59,7 +60,19 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 
 		log.Println(string(p))
 
-		err = conn.WriteMessage(websocket.TextMessage, p)
+		id := newID()
+		msg := map[string]string{
+			"id":  id,
+			"msg": string(p),
+		}
+
+		byt, err := json.Marshal(msg)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		err = conn.WriteMessage(websocket.TextMessage, byt)
 		if err != nil {
 			log.Println(err)
 			return
