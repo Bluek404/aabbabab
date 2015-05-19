@@ -38,10 +38,31 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 		log.Println("messageType != websocket.TextMessage")
 		return
 	}
-	log.Println(p)
-	err = conn.WriteMessage(websocket.TextMessage, []byte("ERR:0"))
+	log.Println(string(p))
+	err = conn.WriteMessage(websocket.TextMessage, []byte("Hi"))
 	if err != nil {
 		log.Println(err)
 		return
+	}
+
+	for {
+		messageType, p, err = conn.ReadMessage()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		if messageType != websocket.TextMessage {
+			log.Println("messageType != websocket.TextMessage")
+			return
+		}
+
+		log.Println(string(p))
+
+		err = conn.WriteMessage(websocket.TextMessage, p)
+		if err != nil {
+			log.Println(err)
+			return
+		}
 	}
 }

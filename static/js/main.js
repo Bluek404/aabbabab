@@ -1,24 +1,64 @@
-var content = document.getElementById("content")
-content.style["width"] = document.body.clientWidth * 0.8 - 48 + "px"
+window.onload = function() {
+    var content = document.getElementById("content");
+    content.style["width"] = document.body.clientWidth * 0.8 - 48 + "px";
 
-window.onResize = function(){
-    content.style["width"] = document.body.clientWidth * 0.8 - 48 + "px"
-}
+    window.onresize = function(){
+        content.style["width"] = document.body.clientWidth * 0.8 - 48 + "px";
+    };
 
-socket = new WebSocket(document.location.protocol == "https:" ? "wss:" : "ws:" + "//" + document.location.host + "/ws")
+    var submitBtn = document.getElementById("submit");
+    var inputBox = document.getElementById("input-box");
+    var wsUrl = document.location.protocol == "https:" ? "wss:" : "ws:" + "//" + document.location.host + "/ws";
+    var socket = new WebSocket(wsUrl);
 
-socket.onopen = function () {
-    socket.send("Hi")
-}
+    inputBox.oninput = function(e) {
+        if (inputBox.value === "") {
+            if (!submitBtn.disabled) {
+                submitBtn.disabled = true;
+            }
+        } else if (submitBtn.disabled && socket.readyState === socket.OPEN) {
+            submitBtn.disabled = false;
+        }
+    };
 
-socket.onerror = function (e) {
-    console.log("err from connect " + e)
-}
+    submitBtn.disabled = true;
 
-socket.onclose = function (e) {
-    console.log("connection closed (" + e.code + ")")
-}
+    submitBtn.onclick = function(e) {
+        if (inputBox.value !== "") {
+            submitBtn.disabled = true;
+            submitBtn.textContent = "发送中……";
+            socket.send(inputBox.value);
+            inputBox.value = "";
+            submitBtn.textContent = "发送";
+        }
+    };
 
-socket.onmessage = function (e) {
-    console.log(e.data)
-}
+    socket.onopen = function(e) {
+        socket.send("Hi");
+    };
+
+    socket.onerror = function(e) {
+        console.log("err from connect " + e);
+    };
+
+    socket.onclose = function(e) {
+        console.log("connection closed (" + e.code + ")");
+    };
+
+    var msgBox = document.getElementById('messages');
+
+    socket.onmessage = function(e) {
+        console.log(e.data);
+        msgBox.innerHTML += marked(e.data);
+        // 滚动到底部
+        msgBox.scrollTop = msgBox.scrollHeight;
+    };
+
+    // 监听快捷键
+    document.onkeydown = function(keys) {
+        // Ctrl + Enter
+        if(keys.ctrlKey && keys.keyCode == 13){
+            submitBtn.click();
+        }
+    };
+};

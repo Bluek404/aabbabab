@@ -63,9 +63,17 @@ body {
 }
 
 .button:active {
-	color: #fff;
+	color: white;
 	background: #304ffe;
 	box-shadow: 1px 2px 7px rgba(0, 0, 0, 0.3) inset;
+}
+
+.button:disabled {
+	color: white;
+	background: darkgray;
+	border: 4px solid gray;
+	cursor: not-allowed;
+	pointer-events: none;
 }
 
 #toolbar {
