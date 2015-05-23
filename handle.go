@@ -5,8 +5,10 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/Bluek404/aabbabab/tpl"
+
 	"github.com/gorilla/websocket"
 )
 
@@ -60,10 +62,11 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 
 		log.Println(string(p))
 
-		id := newID()
 		msg := map[string]string{
-			"id":  id,
-			"msg": string(p),
+			"name":   "Bluek404",
+			"msg":    string(p),
+			"time":   time.Now().Format("2006-01-02 15:04:05"),
+			"avatar": "https://avatars1.githubusercontent.com/u/6631572?v=3&s=96",
 		}
 
 		byt, err := json.Marshal(msg)

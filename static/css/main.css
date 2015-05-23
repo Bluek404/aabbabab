@@ -3,6 +3,10 @@ body {
 	overflow-y: hidden;
 }
 
+p {
+	margin: 5px 0;
+}
+
 #content {
 	width: 80%;
 	height: 100%;
@@ -31,7 +35,6 @@ body {
 }
 
 #messages {
-	background: #8B9AA9;
 	width: 100%;
 	height: 80%;
     overflow: auto;
@@ -81,4 +84,31 @@ body {
 	height: 100%;
 	width: 48px;
 	background: blue;
+}
+
+.msg {
+	padding-left: 64px;
+	min-height: 48px;
+	margin: 10px;
+}
+
+.avatar {
+	margin-left: -64px;
+	width: 48px;
+	height: 48px;
+	float: left;
+}
+
+.msg-header {
+	color: #555;
+}
+
+.msg-body {
+	border: 1px solid #ddd;
+	padding: 5px;
+}
+
+.msg-name {
+	font-weight: bold;
+	margin-right: 5px;
 }
