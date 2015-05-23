@@ -53,7 +53,7 @@ window.onload = function() {
         var msg = document.createElement("div");
         msg.className = "msg";
         msg.innerHTML = '<img class="avatar" src="' + data["avatar"] + '"/>';
-        msg.innerHTML += '<div class="msg-body"><p class="msg-header">' + '<a class=msg-name>' +
+        msg.innerHTML += '<div class="msg-body"><p class="msg-header"><a class=msg-name>' +
             data["name"] + '</a>' + data["time"] + '</p>' + marked(data["msg"]) + '</div>';
 
         // 高亮代码块
