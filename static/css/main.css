@@ -112,3 +112,8 @@ p {
 	font-weight: bold;
 	margin-right: 5px;
 }
+
+.hljs {
+	border-top: 3px solid darkgray;
+	border-bottom: 3px solid darkgray;
+}
