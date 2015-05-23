@@ -36,7 +36,7 @@ import (
 	"time"
 )
 
-const host = ":8080"
+const host = ":8084"
 
 func initRouter() http.Handler {
 	staticFiles := make(map[string][]byte)
@@ -63,7 +63,9 @@ type router struct {
 
 func (router *router) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	t := time.Now()
-	defer log.Println(r.RemoteAddr, r.Method, r.RequestURI, time.Now().Sub(t).String())
+	defer func() {
+		log.Println(r.RemoteAddr, r.Method, r.RequestURI, time.Now().Sub(t).String())
+	}()
 
 	switch r.RequestURI {
 	case "/":

@@ -15,7 +15,7 @@ import (
 var (
 	onlineUser = make(map[string]*websocket.Conn)
 
-// Websocket Upgrader
+	// Websocket Upgrader
 	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -90,10 +90,12 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = conn.WriteMessage(websocket.TextMessage, byt)
-		if err != nil {
-			log.Println(err)
-			return
+		for _, c := range onlineUser {
+			err = c.WriteMessage(websocket.TextMessage, byt)
+			if err != nil {
+				log.Println(err)
+				return
+			}
 		}
 	}
 }

@@ -7,16 +7,16 @@ window.onload = function() {
         i.style.marginLeft = String(document.body.clientWidth/2 - i.offsetWidth/2);
     };
     window.onresize();
-    
+
     var submit = document.getElementById("submitName");
 
     submit.onclick = function () {
         var socket = new WebSocket(wsUrl);
-    
+
         socket.onopen = function(e) {
             socket.send(document.getElementById("inputName").value);
         };
-    
+
         socket.onmessage = function (e) {
             if (JSON.parse(e.data)["error"] === true) {
                 alert("name already exists");
@@ -50,7 +50,7 @@ function onMsg(e) {
         msgBox.appendChild(msg);
         // 滚动到底部
         content.scrollTop = content.scrollHeight;
-    }
+}
 
 function init(socket) {
     var submitBtn = document.getElementById("submit");
