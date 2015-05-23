@@ -8,7 +8,7 @@ func Index() []byte {
 	_buffer := new(bytes.Buffer)
 	_buffer.WriteString("<html lang=\"zh-CN\">")
 	head(_buffer, "")
-	_buffer.WriteString("<body><div id=\"sidebar\"><div id=\"logo\"></div><div id=\"sidebar-content\"></div></div><div id=\"content\"><div id=\"messages\"></div><textarea id=\"input-box\"></textarea><button id=\"submit\" class=\"button\">发送</button></div><div id=\"toolbar\"></div></body></html>")
+	_buffer.WriteString("<body><div id=\"sidebar\"><div id=\"logo\"></div><div id=\"sidebar-content\"></div></div><div id=\"content\"><div id=\"messages\"></div><div id=\"input-box\"><div id=\"toolbar\"><button id=\"submit\" class=\"button\">发送</button></div><textarea id=\"input\"></textarea></div></div><div id=\"init\"><div id=\"i\"><p>请输入用户名：</p><input id=\"inputName\"/><button id=\"submitName\">确定</button></div></div></body></html>")
 	return _buffer.Bytes()
 }
 

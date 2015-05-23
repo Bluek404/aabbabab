@@ -13,7 +13,9 @@ import (
 )
 
 var (
-	// Websocket Upgrader
+	onlineUser = make(map[string]*websocket.Conn)
+
+// Websocket Upgrader
 	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -41,8 +43,21 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 		log.Println("messageType != websocket.TextMessage")
 		return
 	}
-	log.Println(string(p))
-	err = conn.WriteMessage(websocket.TextMessage, []byte("Hi"))
+
+	userName := string(p)
+	_, ok := onlineUser[userName]
+	if ok {
+		err = conn.WriteMessage(websocket.TextMessage, []byte(`{"error":true}`))
+		if err != nil {
+			log.Println(err)
+		}
+		return
+	}
+
+	onlineUser[userName] = conn
+	defer delete(onlineUser, userName)
+
+	err = conn.WriteMessage(websocket.TextMessage, []byte(`{"error":false}`))
 	if err != nil {
 		log.Println(err)
 		return
@@ -63,10 +78,10 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 		log.Println(string(p))
 
 		msg := map[string]string{
-			"name":   "Bluek404",
+			"name":   userName,
 			"msg":    string(p),
 			"time":   time.Now().Format("2006-01-02 15:04:05"),
-			"avatar": "https://avatars1.githubusercontent.com/u/6631572?v=3&s=96",
+			"avatar": "https://avatars.githubusercontent.com/" + userName + "?s=48",
 		}
 
 		byt, err := json.Marshal(msg)

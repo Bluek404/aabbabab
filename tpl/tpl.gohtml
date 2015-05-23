@@ -15,10 +15,20 @@ func Index() []byte {
 			</div>
 			<div id="content">
 				<div id="messages"></div>
-				<textarea id="input-box"></textarea>
-				<button id="submit" class="button">发送</button>
+				<div id="input-box">
+					<div id="toolbar">
+						<button id="submit" class="button">发送</button>
+					</div>
+					<textarea id="input"></textarea>
+				</div>
 			</div>
-			<div id="toolbar"></div>
+			<div id="init">
+				<div id="i">
+					<p>请输入用户名：</p>
+					<input id="inputName"/>
+					<button id="submitName">确定</button>
+				</div>
+			</div>
 		</body>
 	</html>
 	return _buffer.Bytes()
