@@ -8,7 +8,7 @@ func Index() []byte {
 	_buffer := new(bytes.Buffer)
 	_buffer.WriteString("<html lang=\"zh-CN\">")
 	head(_buffer, "")
-	_buffer.WriteString("<body><div id=\"sidebar\"><div id=\"logo\"></div><div id=\"sidebar-content\"></div></div><div id=\"content\"><div id=\"messages\"></div><div id=\"input-box\"><div id=\"toolbar\"><button id=\"edit\" class=\"tab\">编辑</button><button id=\"preview\" class=\"tab\">预览</button><button id=\"submit\" class=\"button\">发送</button></div><textarea id=\"input\"></textarea></div></div><div id=\"init\"><div id=\"i\"><p>请输入用户名：</p><input id=\"inputName\"/><button id=\"submitName\">确定</button></div></div></body></html>")
+	_buffer.WriteString("<body><div id=\"sidebar\"><div id=\"logo\"></div><div id=\"sidebar-content\"></div></div><div id=\"content\"><div id=\"messages\"></div><div id=\"input-box\"><div id=\"toolbar\"><button id=\"edit\" class=\"tab\" disabled>编辑</button><button id=\"preview\" class=\"tab\">预览</button><button id=\"submit\" class=\"button\" disabled>发送</button></div><textarea id=\"input\"></textarea><div id=\"preview-box\"></div></div></div><div id=\"init\"><div id=\"i\"><p>请输入用户名：</p><input id=\"inputName\"/><button id=\"submitName\">确定</button></div></div></body></html>")
 	return _buffer.Bytes()
 }
 

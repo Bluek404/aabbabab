@@ -159,3 +159,10 @@ p code {
 	margin-bottom: -1px;
     padding-bottom: 11px;
 }
+
+#preview-box {
+	width: 100%;
+	min-height: 100px;
+	display: none;
+	border-top: 1px solid #ddd;
+}

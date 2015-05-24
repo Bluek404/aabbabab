@@ -17,11 +17,12 @@ func Index() []byte {
 				<div id="messages"></div>
 				<div id="input-box">
 					<div id="toolbar">
-						<button id="edit" class="tab">编辑</button>
+						<button id="edit" class="tab" disabled>编辑</button>
 						<button id="preview" class="tab">预览</button>
-						<button id="submit" class="button">发送</button>
+						<button id="submit" class="button" disabled>发送</button>
 					</div>
 					<textarea id="input"></textarea>
+					<div id="preview-box"></div>
 				</div>
 			</div>
 			<div id="init">

@@ -45,6 +45,13 @@ function login() {
     };
 }
 
+function highlightAll(elment) {
+    var codeBlocks = elment.getElementsByTagName("pre");
+    for (var i = 0; i < codeBlocks.length; i++) {
+        hljs.highlightBlock(codeBlocks[i]);
+    }
+}
+
 function onMsg(e) {
         console.log(e.data);
         var msgBox = document.getElementById("messages");
@@ -58,10 +65,7 @@ function onMsg(e) {
             data["name"] + '</a>' + data["time"] + '</p>' + marked(data["msg"]) + '</div>';
 
         // 高亮代码块
-        var codeBlocks = msg.getElementsByTagName("pre");
-        for (var i = 0; i < codeBlocks.length; i++) {
-            hljs.highlightBlock(codeBlocks[i]);
-        }
+        highlightAll(msg);
 
         msgBox.appendChild(msg);
         // 滚动到底部
@@ -71,6 +75,9 @@ function onMsg(e) {
 function init(socket) {
     var submitBtn = document.getElementById("submit");
     var input = document.getElementById("input");
+    var previewBox = document.getElementById("preview-box");
+    var previewTab = document.getElementById("preview");
+    var editTab = document.getElementById("edit");
 
     input.oninput = function(e) {
         if (input.value === "") {
@@ -95,6 +102,8 @@ function init(socket) {
             submitBtn.textContent = "发送中……";
             socket.send(input.value);
             input.value = "";
+            previewBox.innerHTML = "";
+            editTab.click();
             submitBtn.textContent = "发送";
         }
     };
@@ -116,18 +125,20 @@ function init(socket) {
         }
     };
 
-    var previewTab = document.getElementById("preview");
-    var editTab = document.getElementById("edit");
-
-    editTab.disabled = true;
-
     previewTab.onclick = function () {
         previewTab.disabled = true;
         editTab.disabled = false;
+        input.style.display = "none";
+        previewBox.style.display = "inline-block";
+        previewBox.innerHTML = marked(input.value);
+
+        highlightAll(previewBox);
     };
 
     editTab.onclick = function () {
         editTab.disabled = true;
         previewTab.disabled = false;
+        previewBox.style.display = "none";
+        input.style.display = "inline-block";
     };
 }
