@@ -19,24 +19,31 @@ window.onload = function() {
         }
     };
 
-    submit.onclick = function () {
-        var socket = new WebSocket(wsUrl);
-
-        socket.onopen = function(e) {
-            socket.send(document.getElementById("inputName").value);
-        };
-
-        socket.onmessage = function (e) {
-            if (JSON.parse(e.data)["error"] === true) {
-                alert("name already exists");
-            } else {
-                socket.onmessage = onMsg;
-                init(socket);
-                document.getElementById("init").style.display = "none";
-            }
-        };
-    };
+    submit.onclick = login;
 };
+
+function login() {
+    var socket = new WebSocket(wsUrl);
+
+    socket.onopen = function(e) {
+        socket.send(document.getElementById("inputName").value);
+    };
+
+    socket.onerror = function(e) {
+        console.log("err from connect " + e);
+        setTimeout(login, 5000);
+    };
+
+    socket.onmessage = function (e) {
+        if (JSON.parse(e.data)["error"] === true) {
+            alert("name already exists");
+        } else {
+            socket.onmessage = onMsg;
+            init(socket);
+            document.getElementById("init").style.display = "none";
+        }
+    };
+}
 
 function onMsg(e) {
         console.log(e.data);
@@ -75,7 +82,12 @@ function init(socket) {
         }
     };
 
-    submitBtn.disabled = true;
+    if (input.value === "") {
+        submitBtn.disabled = true;
+    } else {
+        submitBtn.disabled = false;
+    }
+    submitBtn.textContent = "发送";
 
     submitBtn.onclick = function(e) {
         if (input.value !== "") {
@@ -87,11 +99,12 @@ function init(socket) {
         }
     };
 
-    socket.onerror = function(e) {
-        console.log("err from connect " + e);
-    };
-
     socket.onclose = function(e) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "与服务器链接中断";
+        setTimeout(function() {
+            login();
+        },5000);
         console.log("connection closed (" + e.code + ")");
     };
 
