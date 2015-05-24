@@ -146,6 +146,7 @@ p code {
 	padding: 10px;
     float: left;
 	cursor: pointer;
+	position: relative;
 }
 
 .tab:hover {
@@ -155,4 +156,6 @@ p code {
 .tab:disabled {
 	cursor: not-allowed;
 	pointer-events: none;
+	margin-bottom: -1px;
+    padding-bottom: 11px;
 }
