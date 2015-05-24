@@ -102,4 +102,19 @@ function init(socket) {
             submitBtn.click();
         }
     };
+
+    var previewTab = document.getElementById("preview");
+    var editTab = document.getElementById("edit");
+
+    editTab.disabled = true;
+
+    previewTab.onclick = function () {
+        previewTab.disabled = true;
+        editTab.disabled = false;
+    };
+
+    editTab.onclick = function () {
+        editTab.disabled = true;
+        previewTab.disabled = false;
+    };
 }
