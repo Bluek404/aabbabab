@@ -8,7 +8,16 @@ window.onload = function() {
     };
     window.onresize();
 
+    document.getElementById("inputName").focus();
+
     var submit = document.getElementById("submitName");
+
+    document.onkeydown = function(keys) {
+        // Enter
+        if(keys.keyCode == 13){
+            submit.click();
+        }
+    };
 
     submit.onclick = function () {
         var socket = new WebSocket(wsUrl);
