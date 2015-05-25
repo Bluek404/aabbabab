@@ -57,7 +57,8 @@ p code {
     overflow: auto;
 	border: 0;
 	border-top: 1px solid #ddd;
-	padding: 0;
+	padding: 10px;
+	box-sizing: border-box;
     resize: vertical;
 }
 
@@ -164,6 +165,7 @@ p code {
 #preview-box {
 	width: 100%;
 	min-height: 100px;
+	padding: 10px;
 	display: none;
 	border-top: 1px solid #ddd;
 }
