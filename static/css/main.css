@@ -58,7 +58,6 @@ p code {
 	border: 0;
 	border-top: 1px solid #ddd;
 	padding: 10px;
-	box-sizing: border-box;
     resize: vertical;
 }
 
@@ -167,5 +166,6 @@ p code {
 	min-height: 100px;
 	padding: 10px;
 	display: none;
+	box-sizing: border-box;
 	border-top: 1px solid #ddd;
 }
