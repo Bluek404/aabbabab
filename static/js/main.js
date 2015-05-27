@@ -19,7 +19,10 @@ window.onload = function() {
         }
     };
 
-    submit.onclick = login;
+    submit.onclick = function() {
+        submit.disabled = true;
+        login();
+    };
 };
 
 function login() {
@@ -35,8 +38,17 @@ function login() {
     };
 
     socket.onmessage = function (e) {
-        if (JSON.parse(e.data)["error"] === true) {
+        if (JSON.parse(e.data)["error"]) {
             alert("name already exists");
+            socket.close();
+            var submit = document.getElementById("submitName");
+            submit.disabled = false;
+            document.getElementById("init").style.display = "block";
+            document.onkeydown = function(keys) {
+                if(keys.keyCode == 13){
+                    submit.click();
+                }
+            };
         } else {
             init(socket);
             document.getElementById("init").style.display = "none";
