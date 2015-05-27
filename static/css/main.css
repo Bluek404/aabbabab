@@ -13,6 +13,11 @@ p code {
 	padding: 0 2px;
 }
 
+blockquote {
+	border-left: 3px darkgray solid;
+    padding-left: 7px;
+}
+
 #content {
 	width: 80%;
 	height: 100%;
