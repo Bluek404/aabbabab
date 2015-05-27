@@ -38,7 +38,6 @@ function login() {
         if (JSON.parse(e.data)["error"] === true) {
             alert("name already exists");
         } else {
-            socket.onmessage = onMsg;
             init(socket);
             document.getElementById("init").style.display = "none";
         }
@@ -73,6 +72,10 @@ function onMsg(e) {
 }
 
 function init(socket) {
+    marked.setOptions({
+        sanitize: true
+    });
+    
     var submitBtn = document.getElementById("submit");
     var input = document.getElementById("input");
     var previewBox = document.getElementById("preview-box");
@@ -94,7 +97,10 @@ function init(socket) {
     } else {
         submitBtn.disabled = false;
     }
-    submitBtn.textContent = "发送";
+    submitBtn.textContent = "服务器链接已建立";
+    setTimeout(function() {
+        submitBtn.textContent = "发送";
+    }, 1500);
 
     submitBtn.onclick = function(e) {
         if (input.value !== "") {
@@ -108,12 +114,12 @@ function init(socket) {
         }
     };
 
+
+    socket.onmessage = onMsg;
     socket.onclose = function(e) {
         submitBtn.disabled = true;
         submitBtn.textContent = "与服务器链接中断";
-        setTimeout(function() {
-            login();
-        },5000);
+        setTimeout(login(), 5000);
         console.log("connection closed (" + e.code + ")");
     };
 
