@@ -63,22 +63,27 @@ function highlightAll(elment) {
     }
 }
 
+function genMsg(jsonData) {
+    var data = JSON.parse(jsonData);
+    var msg = document.createElement("div");
+
+    msg.className = "msg";
+    msg.innerHTML = '<img class="avatar" src="' + data["avatar"] + '"/>' +
+        '<div class="msg-body"><p class="msg-header"><a class=msg-name>' +
+        data["name"] + '</a>' + data["time"] + '</p>' + marked(data["msg"]) + '</div>';
+
+    // 高亮代码块
+    highlightAll(msg);
+
+    return msg;
+}
+
 function onMsg(e) {
         console.log(e.data);
         var msgBox = document.getElementById("messages");
         var content = document.getElementById("content");
-        var data = JSON.parse(e.data);
-        var msg = document.createElement("div");
 
-        msg.className = "msg";
-        msg.innerHTML = '<img class="avatar" src="' + data["avatar"] + '"/>';
-        msg.innerHTML += '<div class="msg-body"><p class="msg-header"><a class=msg-name>' +
-            data["name"] + '</a>' + data["time"] + '</p>' + marked(data["msg"]) + '</div>';
-
-        // 高亮代码块
-        highlightAll(msg);
-
-        msgBox.appendChild(msg);
+        msgBox.appendChild(genMsg(e.data));
         // 滚动到底部
         content.scrollTop = content.scrollHeight;
 }
@@ -87,12 +92,14 @@ function init(socket) {
     marked.setOptions({
         sanitize: true
     });
-    
+
     var submitBtn = document.getElementById("submit");
     var input = document.getElementById("input");
     var previewBox = document.getElementById("preview-box");
     var previewTab = document.getElementById("preview");
     var editTab = document.getElementById("edit");
+
+    input.focus();
 
     input.oninput = function(e) {
         if (input.value === "") {
@@ -125,7 +132,6 @@ function init(socket) {
             submitBtn.textContent = "发送";
         }
     };
-
 
     socket.onmessage = onMsg;
     socket.onclose = function(e) {
