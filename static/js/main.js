@@ -26,11 +26,17 @@ window.onload = function() {
     };
 };
 
+var lastMsgID = "";
+
 function login() {
     socket = new WebSocket(wsUrl);
 
     socket.onopen = function(e) {
-        socket.send(document.getElementById("inputName").value);
+        socket.send(JSON.stringify({
+            "name": document.getElementById("inputName").value,
+            "topic": "hall",
+            "lastMsgID": lastMsgID,
+        }));
     };
 
     socket.onerror = function(e) {
@@ -118,6 +124,7 @@ function genMsg(jsonData) {
 
     initStar(msg);
 
+    lastMsgID = msg.id;
     return msg;
 }
 

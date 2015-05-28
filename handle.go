@@ -15,7 +15,7 @@ import (
 var (
 	onlineUser = make(map[string]*websocket.Conn)
 
-	// Websocket Upgrader
+// Websocket Upgrader
 	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -26,18 +26,32 @@ func Index(rw http.ResponseWriter, r *http.Request) {
 	rw.Write(tpl.Index())
 }
 
-func sendHistory(conn *websocket.Conn, topic string) error {
+func sendHistory(conn *websocket.Conn, topic, lastMsgID string) error {
 	rows, err := db.Query(`SELECT * FROM ` + topic + ` ORDER BY time`)
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
 
+	var needSend bool
+	if lastMsgID == "" {
+		// 发送全部历史消息
+		needSend = true
+	}
 	for rows.Next() {
 		var id, user, value, t string
 		err = rows.Scan(&id, &user, &value, &t)
 		if err != nil {
 			return err
+		}
+		if id == lastMsgID {
+			needSend = true
+			// 到这里的所有消息客户端已接收过
+			// 从下一个消息开始发送
+			continue
+		}
+		if !needSend {
+			continue
 		}
 		msg := map[string]string{
 			"id":     id,
@@ -82,7 +96,14 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userName := string(p)
+	data := make(map[string]string)
+	err = json.Unmarshal(p, &data)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	userName := data["name"]
 	_, ok := onlineUser[userName]
 	if ok {
 		err = conn.WriteMessage(websocket.TextMessage, []byte(`{"error":true}`))
@@ -104,7 +125,7 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = sendHistory(conn, "hall")
+	err = sendHistory(conn, data["topic"], data["lastMsgID"])
 	if err != nil {
 		log.Println(err)
 		return
@@ -113,7 +134,9 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 	for {
 		messageType, p, err = conn.ReadMessage()
 		if err != nil {
-			log.Println(err)
+			if err != io.EOF || err != io.ErrUnexpectedEOF {
+				log.Println(err)
+			}
 			return
 		}
 
@@ -122,7 +145,7 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		data := make(map[string]string)
+		data = make(map[string]string)
 		err = json.Unmarshal(p, &data)
 		if err != nil {
 			log.Println(err)
@@ -141,6 +164,7 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 				id, userName, data["value"], t)
 			if err != nil {
 				log.Println(err)
+				return
 			}
 			log.Println(result.LastInsertId())
 
