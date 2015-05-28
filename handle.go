@@ -26,6 +26,44 @@ func Index(rw http.ResponseWriter, r *http.Request) {
 	rw.Write(tpl.Index())
 }
 
+func sendHistory(conn *websocket.Conn, topic string) error {
+	rows, err := db.Query(`SELECT * FROM ` + topic + ` ORDER BY time`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id, user, value, t string
+		err = rows.Scan(&id, &user, &value, &t)
+		if err != nil {
+			return err
+		}
+		msg := map[string]string{
+			"id":     id,
+			"name":   user,
+			"msg":    value,
+			"time":   t,
+			"avatar": "https://avatars.githubusercontent.com/" + user + "?s=48",
+		}
+
+		byt, err := json.Marshal(msg)
+		if err != nil {
+			return err
+		}
+
+		err = conn.WriteMessage(websocket.TextMessage, byt)
+		if err != nil {
+			return err
+		}
+	}
+	err = rows.Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func wsMain(rw http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(rw, r, nil)
 	if err != nil && err != io.EOF {
@@ -66,6 +104,12 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = sendHistory(conn, "hall")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
 	for {
 		messageType, p, err = conn.ReadMessage()
 		if err != nil {
@@ -89,11 +133,22 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 		case "msg":
 			log.Println(userName, "msg:", data["value"])
 			id := newID()
+			t := time.Now().Format("2006-01-02 15:04:05")
+
+			result, err := db.Exec(`
+				INSERT INTO `+data["topic"]+` (id, user, value, time)
+				VALUES                        (?,  ?,    ?,     ?   )`,
+				id, userName, data["value"], t)
+			if err != nil {
+				log.Println(err)
+			}
+			log.Println(result.LastInsertId())
+
 			msg := map[string]string{
 				"id":     id,
 				"name":   userName,
 				"msg":    data["value"],
-				"time":   time.Now().Format("2006-01-02 15:04:05"),
+				"time":   t,
 				"avatar": "https://avatars.githubusercontent.com/" + userName + "?s=48",
 			}
 

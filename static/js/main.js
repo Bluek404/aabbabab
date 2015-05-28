@@ -170,6 +170,7 @@ function init() {
             submitBtn.textContent = "发送中……";
             socket.send(JSON.stringify({
                 "type": "msg",
+                "topic": "hall",
                 "value": input.value,
             }));
             input.value = "";

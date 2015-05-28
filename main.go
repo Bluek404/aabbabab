@@ -36,7 +36,10 @@ import (
 	"time"
 )
 
-const host = ":8084"
+const (
+	host = ":8084"
+	dsn  = "root:password@tcp(127.0.0.1:3306)/aabbabab?charset=utf8"
+)
 
 func initRouter() http.Handler {
 	staticFiles := make(map[string][]byte)
