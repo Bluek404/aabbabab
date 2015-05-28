@@ -54,6 +54,9 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Println("[+]:", userName)
+	defer log.Println("[-]:", userName)
+
 	onlineUser[userName] = conn
 	defer delete(onlineUser, userName)
 
