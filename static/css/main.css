@@ -175,3 +175,18 @@ blockquote {
 	box-sizing: border-box;
 	border-top: 1px solid #ddd;
 }
+
+.star {
+    margin-left: 5px;
+    font-weight: bold;
+    display: none;
+	cursor: pointer;
+}
+
+.star:hover {
+    color: darkorange;
+}
+
+.star.on {
+	color: orange;
+}

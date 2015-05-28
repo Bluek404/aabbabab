@@ -75,27 +75,44 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		log.Println(string(p))
-
-		msg := map[string]string{
-			"name":   userName,
-			"msg":    string(p),
-			"time":   time.Now().Format("2006-01-02 15:04:05"),
-			"avatar": "https://avatars.githubusercontent.com/" + userName + "?s=48",
-		}
-
-		byt, err := json.Marshal(msg)
+		data := make(map[string]string)
+		err = json.Unmarshal(p, &data)
 		if err != nil {
 			log.Println(err)
 			return
 		}
 
-		for _, c := range onlineUser {
-			err = c.WriteMessage(websocket.TextMessage, byt)
+		switch data["type"] {
+		case "msg":
+			log.Println(userName, "msg:", data["value"])
+			id := newID()
+			msg := map[string]string{
+				"id":     id,
+				"name":   userName,
+				"msg":    data["value"],
+				"time":   time.Now().Format("2006-01-02 15:04:05"),
+				"avatar": "https://avatars.githubusercontent.com/" + userName + "?s=48",
+			}
+
+			byt, err := json.Marshal(msg)
 			if err != nil {
 				log.Println(err)
 				return
 			}
+
+			for _, c := range onlineUser {
+				err = c.WriteMessage(websocket.TextMessage, byt)
+				if err != nil {
+					log.Println(err)
+					return
+				}
+			}
+		case "star":
+			log.Println(userName, "star:", data["id"])
+		case "unstar":
+			log.Println(userName, "unstar:", data["id"])
+		default:
+			log.Println(data)
 		}
 	}
 }

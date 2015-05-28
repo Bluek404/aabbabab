@@ -1,4 +1,5 @@
 var wsUrl = document.location.protocol == "https:" ? "wss:" : "ws:" + "//" + document.location.host + "/ws";
+var socket;
 
 window.onload = function() {
     window.onresize = function () {
@@ -26,7 +27,7 @@ window.onload = function() {
 };
 
 function login() {
-    var socket = new WebSocket(wsUrl);
+    socket = new WebSocket(wsUrl);
 
     socket.onopen = function(e) {
         socket.send(document.getElementById("inputName").value);
@@ -50,7 +51,7 @@ function login() {
                 }
             };
         } else {
-            init(socket);
+            init();
             document.getElementById("init").style.display = "none";
         }
     };
@@ -63,17 +64,59 @@ function highlightAll(elment) {
     }
 }
 
+function initStar(msgElem) {
+    var star = msgElem.getElementsByClassName("star")[0];
+
+    star.onclick = function() {
+        addStar(msgElem, star);
+    };
+
+    msgElem.onmouseenter = function(){
+        star.style.display = "initial";
+    };
+    msgElem.onmouseleave = function(){
+        star.style.display = "none";
+    };
+}
+
+function addStar(msgElem, star) {
+    socket.send(JSON.stringify({
+        "type": "star",
+        "id": msgElem.id,
+    }));
+    star.classList.add("on");
+    star.onclick = function() {
+        remStar(msgElem, star);
+    };
+
+    msgElem.onmouseenter = null;
+    msgElem.onmouseleave = null;
+}
+
+function remStar(msgElem, star) {
+    socket.send(JSON.stringify({
+        "type": "unstar",
+        "id": msgElem.id,
+    }));
+    star.classList.remove("on");
+    initStar(msgElem);
+}
+
 function genMsg(jsonData) {
     var data = JSON.parse(jsonData);
     var msg = document.createElement("div");
 
+    msg.id = data["id"];
     msg.className = "msg";
     msg.innerHTML = '<img class="avatar" src="' + data["avatar"] + '"/>' +
         '<div class="msg-body"><p class="msg-header"><a class=msg-name>' +
-        data["name"] + '</a>' + data["time"] + '</p>' + marked(data["msg"]) + '</div>';
+        data["name"] + '</a>' + data["time"] + '<span class="star">★</span>' +
+        '</p>' + marked(data["msg"]) + '</div>';
 
     // 高亮代码块
     highlightAll(msg);
+
+    initStar(msg);
 
     return msg;
 }
@@ -88,7 +131,7 @@ function onMsg(e) {
         content.scrollTop = content.scrollHeight;
 }
 
-function init(socket) {
+function init() {
     marked.setOptions({
         sanitize: true
     });
@@ -125,7 +168,10 @@ function init(socket) {
         if (input.value !== "") {
             submitBtn.disabled = true;
             submitBtn.textContent = "发送中……";
-            socket.send(input.value);
+            socket.send(JSON.stringify({
+                "type": "msg",
+                "value": input.value,
+            }));
             input.value = "";
             previewBox.innerHTML = "";
             editTab.click();
