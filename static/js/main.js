@@ -1,5 +1,8 @@
-var wsUrl = document.location.protocol == "https:" ? "wss:" : "ws:" + "//" + document.location.host + "/ws";
+var wsUrl = document.location.protocol === "https:" ? "wss:" : "ws:" + "//" + document.location.host + "/ws";
 var socket;
+
+var topic = document.location.hash === "" ? "hall" : document.location.hash;
+var topicList;
 
 window.onload = function() {
     window.onresize = function () {
@@ -30,11 +33,19 @@ var lastMsgID = "";
 
 function login() {
     socket = new WebSocket(wsUrl);
+    
+    var name = document.getElementById("inputName").value;
+    var submit = document.getElementById("submitName");
+    if (!/^\w{3,16}$/.test(name)) {
+        alert("用户名必须为字母和数字，长度大于等于3小于等于16");
+        submit.disabled = false;
+        return;
+    }
 
     socket.onopen = function(e) {
         socket.send(JSON.stringify({
-            "name": document.getElementById("inputName").value,
-            "topic": "hall",
+            "name": name,
+            "topic": topic,
             "lastMsgID": lastMsgID,
         }));
     };
@@ -48,7 +59,6 @@ function login() {
         if (JSON.parse(e.data)["error"]) {
             alert("name already exists");
             socket.close();
-            var submit = document.getElementById("submitName");
             submit.disabled = false;
             document.getElementById("init").style.display = "block";
             document.onkeydown = function(keys) {
@@ -177,7 +187,7 @@ function init() {
             submitBtn.textContent = "发送中……";
             socket.send(JSON.stringify({
                 "type": "msg",
-                "topic": "hall",
+                "topic": topic,
                 "value": input.value,
             }));
             input.value = "";

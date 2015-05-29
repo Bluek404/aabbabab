@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/Bluek404/aabbabab/tpl"
@@ -20,6 +21,9 @@ var (
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 	}
+
+	topicIdReg = regexp.MustCompile(`^\w{16}$`)
+	nameReg    = regexp.MustCompile(`^\w{3,16}$`)
 )
 
 func Index(rw http.ResponseWriter, r *http.Request) {
@@ -59,6 +63,7 @@ func sendHallHistory(conn *websocket.Conn, lastMsgID string) error {
 			"id":     id,
 			"name":   user,
 			"msg":    value,
+			"topic":  "hall",
 			"time":   t,
 			"avatar": "https://avatars.githubusercontent.com/" + user + "?s=48",
 		}
@@ -150,6 +155,7 @@ func sendHistory(conn *websocket.Conn, topic, lastMsgID string) error {
 			"id":     id,
 			"name":   user,
 			"msg":    value,
+			"topic":  topic,
 			"time":   t,
 			"avatar": "https://avatars.githubusercontent.com/" + user + "?s=48",
 		}
@@ -192,6 +198,10 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	userName := data["name"]
+	if !nameReg.MatchString(userName) {
+		log.Println("用户名非法:", userName)
+		return
+	}
 	_, ok := onlineUser[userName]
 	if ok {
 		err = conn.WriteMessage(websocket.TextMessage, []byte(`{"error":true}`))
@@ -243,6 +253,15 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 		switch data["type"] {
 		case "msg":
 			log.Println(userName, "msg:", data["value"])
+
+			// 防范SQL注入
+			if data["topic"] != "hall" {
+				if !topicIdReg.MatchString(data["topic"]) {
+					log.Println("topic非法:", data["topic"])
+					return
+				}
+			}
+
 			id := newID()
 			t := time.Now().Format("2006-01-02 15:04:05")
 
@@ -259,6 +278,7 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 				"id":     id,
 				"name":   userName,
 				"msg":    data["value"],
+				"topic":  data["topic"],
 				"time":   t,
 				"avatar": "https://avatars.githubusercontent.com/" + userName + "?s=48",
 			}
