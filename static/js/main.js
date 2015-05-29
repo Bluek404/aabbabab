@@ -82,7 +82,7 @@ function highlightAll(elment) {
             // 非法语言名，删除
             code.classList.remove(src);
         }
-        hljs.highlightBlock(codeBlocks[i]);
+        hljs.highlightBlock(code);
     }
 }
 
