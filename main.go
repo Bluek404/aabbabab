@@ -39,6 +39,8 @@ import (
 const (
 	host = ":8084"
 	dsn  = "user:password@tcp(127.0.0.1:3306)/aabbabab?charset=utf8"
+	// 大厅中显示的消息记录数量
+	hallHistoryNum = 50
 )
 
 func initRouter() http.Handler {

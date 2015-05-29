@@ -15,7 +15,7 @@ import (
 var (
 	onlineUser = make(map[string]*websocket.Conn)
 
-// Websocket Upgrader
+	// Websocket Upgrader
 	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -26,7 +26,100 @@ func Index(rw http.ResponseWriter, r *http.Request) {
 	rw.Write(tpl.Index())
 }
 
+func sendJson(conn *websocket.Conn, msg interface{}) error {
+	byt, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+
+	err = conn.WriteMessage(websocket.TextMessage, byt)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// 因为大厅中消息众多
+// 所以只发送最新 hallHistoryNum 条消息记录
+func sendHallHistory(conn *websocket.Conn, lastMsgID string) error {
+	rows, err := db.Query(`SELECT * FROM hall ORDER BY time DESC`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	msgList := make([]map[string]string, hallHistoryNum)
+	for i := hallHistoryNum - 1; i >= 0 && rows.Next(); i-- {
+		var id, user, value, t string
+		err = rows.Scan(&id, &user, &value, &t)
+		if err != nil {
+			return err
+		}
+		msg := map[string]string{
+			"id":     id,
+			"name":   user,
+			"msg":    value,
+			"time":   t,
+			"avatar": "https://avatars.githubusercontent.com/" + user + "?s=48",
+		}
+
+		msgList[i] = msg
+	}
+
+	var needSend bool
+	if lastMsgID == "" {
+		// 发送全部历史消息
+		needSend = true
+	}
+
+	send := func() error {
+		for _, msg := range msgList {
+			if msg["id"] == lastMsgID {
+				needSend = true
+				// 到这里的所有消息客户端已接收过
+				// 从下一个消息开始发送
+				continue
+			}
+			if !needSend {
+				continue
+			}
+
+			err = sendJson(conn, msg)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	err = send()
+	if err != nil {
+		return err
+	}
+
+	// 没有找到需要发送的消息
+	// 离线过程中的消息数量可能已经超过 hallHistoryNum
+	// 发送全部消息
+	if !needSend {
+		needSend = true
+		err = send()
+		if err != nil {
+			return err
+		}
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func sendHistory(conn *websocket.Conn, topic, lastMsgID string) error {
+	if topic == "hall" {
+		return sendHallHistory(conn, lastMsgID)
+	}
+
 	rows, err := db.Query(`SELECT * FROM ` + topic + ` ORDER BY time`)
 	if err != nil {
 		return err
@@ -61,12 +154,7 @@ func sendHistory(conn *websocket.Conn, topic, lastMsgID string) error {
 			"avatar": "https://avatars.githubusercontent.com/" + user + "?s=48",
 		}
 
-		byt, err := json.Marshal(msg)
-		if err != nil {
-			return err
-		}
-
-		err = conn.WriteMessage(websocket.TextMessage, byt)
+		err = sendJson(conn, msg)
 		if err != nil {
 			return err
 		}
@@ -158,7 +246,7 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 			id := newID()
 			t := time.Now().Format("2006-01-02 15:04:05")
 
-			result, err := db.Exec(`
+			_, err := db.Exec(`
 				INSERT INTO `+data["topic"]+` (id, user, value, time)
 				VALUES                        (?,  ?,    ?,     ?   )`,
 				id, userName, data["value"], t)
@@ -166,7 +254,6 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 				log.Println(err)
 				return
 			}
-			log.Println(result.LastInsertId())
 
 			msg := map[string]string{
 				"id":     id,
