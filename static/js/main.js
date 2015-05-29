@@ -76,6 +76,14 @@ function login() {
 function highlightAll(elment) {
     var codeBlocks = elment.getElementsByTagName("pre");
     for (var i = 0; i < codeBlocks.length; i++) {
+        var code = codeBlocks[i].getElementsByTagName("code")[0];
+        code.classList.forEach(function(src) {
+            if (!/^[\w-]+$/.test(src)) {
+                // 非法语言名，删除
+                code.classList.remove(src);
+                return;
+            }
+        });
         hljs.highlightBlock(codeBlocks[i]);
     }
 }
