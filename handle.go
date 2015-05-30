@@ -22,7 +22,7 @@ var (
 		WriteBufferSize: 1024,
 	}
 
-	topicIdReg = regexp.MustCompile(`^\w{16}$`)
+	topicIdReg = regexp.MustCompile(`^\w{8}$`)
 	nameReg    = regexp.MustCompile(`^\w{3,16}$`)
 )
 
@@ -267,7 +267,7 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 		case "msg":
 			log.Println("["+topic+"]:", userName, "msg:", data["value"])
 
-			id := newID()
+			id := newRandID()
 			t := time.Now().Format("2006-01-02 15:04:05")
 
 			_, err := db.Exec(`
