@@ -4,13 +4,6 @@ var socket;
 var topic = document.location.hash === "" ? "hall" : document.location.hash;
 
 window.onload = function() {
-    window.onresize = function () {
-        var i = document.getElementById("i");
-        i.style.marginTop = String(document.body.clientHeight/2 - i.offsetHeight/2);
-        i.style.marginLeft = String(document.body.clientWidth/2 - i.offsetWidth/2);
-    };
-    window.onresize();
-
     document.getElementById("inputName").focus();
 
     var submit = document.getElementById("submitName");
@@ -26,13 +19,26 @@ window.onload = function() {
         submit.disabled = true;
         login();
     };
+
+    var newTopic = document.getElementById("new-topic");
+    var newTopicBox = document.getElementById("new-topic-box");
+
+    newTopic.onclick = function() {
+        newTopicBox.parentElement.style.display = "block";
+    };
+    newTopicBox.onclick = function(e) {
+        e.stopPropagation();
+    };
+    newTopicBox.parentElement.onclick = function() {
+        newTopicBox.parentElement.style.display = "none";
+    };
 };
 
 var lastMsgID = new Map();
 
 function login() {
     socket = new WebSocket(wsUrl);
-    
+
     var name = document.getElementById("inputName").value;
     var submit = document.getElementById("submitName");
     if (!/^\w{3,16}$/.test(name)) {

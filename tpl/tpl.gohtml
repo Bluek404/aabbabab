@@ -11,7 +11,9 @@ func Index() []byte {
 		<body>
 			<div id="sidebar">
 				<div id="logo"></div>
-				<div id="sidebar-content"></div>
+				<div id="sidebar-content">
+					<button id="new-topic" class="button">发表新主题</button>
+				</div>
 			</div>
 			<div id="content">
 				<div id="messages"></div>
@@ -31,6 +33,9 @@ func Index() []byte {
 					<input id="inputName"/>
 					<button id="submitName">确定</button>
 				</div>
+			</div>
+			<div class="background">
+				<div id="new-topic-box"></div>
 			</div>
 		</body>
 	</html>

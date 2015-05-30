@@ -241,6 +241,14 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	insMsgStmt, err := db.Prepare(`
+				INSERT INTO ` + topic + ` (id, user, value, time)
+				VALUES                        (?,  ?,    ?,     ?   )`)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
 	for {
 		messageType, p, err = conn.ReadMessage()
 		if err != nil {
@@ -270,9 +278,7 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 			id := newRandID()
 			t := time.Now().Format("2006-01-02 15:04:05")
 
-			_, err := db.Exec(`
-				INSERT INTO `+topic+` (id, user, value, time)
-				VALUES                        (?,  ?,    ?,     ?   )`,
+			_, err := insMsgStmt.Exec(
 				id, userName, data["value"], t)
 			if err != nil {
 				log.Println(err)
