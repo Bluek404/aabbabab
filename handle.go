@@ -218,6 +218,8 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// TODO: 从数据库中检查 topic 是否真实存在
+
 	log.Println("["+topic+"]+:", userName)
 	defer log.Println("["+topic+"]+:", userName)
 
@@ -260,6 +262,7 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// TODO: 新建 topic 的 API
 		switch data["type"] {
 		case "msg":
 			log.Println("["+topic+"]:", userName, "msg:", data["value"])
