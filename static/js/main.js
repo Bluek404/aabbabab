@@ -2,7 +2,6 @@ var wsUrl = document.location.protocol === "https:" ? "wss:" : "ws:" + "//" + do
 var socket;
 
 var topic = document.location.hash === "" ? "hall" : document.location.hash;
-var topicList;
 
 window.onload = function() {
     window.onresize = function () {
@@ -29,7 +28,7 @@ window.onload = function() {
     };
 };
 
-var lastMsgID = "";
+var lastMsgID = new Map();
 
 function login() {
     socket = new WebSocket(wsUrl);
@@ -46,7 +45,7 @@ function login() {
         socket.send(JSON.stringify({
             "name": name,
             "topic": topic,
-            "lastMsgID": lastMsgID,
+            "lastMsgID": lastMsgID[topic],
         }));
     };
 
@@ -140,7 +139,7 @@ function genMsg(jsonData) {
 
     initStar(msg);
 
-    lastMsgID = msg.id;
+    lastMsgID[topic] = msg.id;
     return msg;
 }
 
@@ -193,7 +192,6 @@ function init() {
             submitBtn.textContent = "发送中……";
             socket.send(JSON.stringify({
                 "type": "msg",
-                "topic": topic,
                 "value": input.value,
             }));
             input.value = "";

@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	onlineUser = make(map[string]*websocket.Conn)
+	onlineUser = make(map[string]map[string]*websocket.Conn)
 
 	// Websocket Upgrader
 	upgrader = websocket.Upgrader{
@@ -63,7 +63,6 @@ func sendHallHistory(conn *websocket.Conn, lastMsgID string) error {
 			"id":     id,
 			"name":   user,
 			"msg":    value,
-			"topic":  "hall",
 			"time":   t,
 			"avatar": "https://avatars.githubusercontent.com/" + user + "?s=48",
 		}
@@ -155,7 +154,6 @@ func sendHistory(conn *websocket.Conn, topic, lastMsgID string) error {
 			"id":     id,
 			"name":   user,
 			"msg":    value,
-			"topic":  topic,
 			"time":   t,
 			"avatar": "https://avatars.githubusercontent.com/" + user + "?s=48",
 		}
@@ -211,11 +209,23 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println("[+]:", userName)
-	defer log.Println("[-]:", userName)
+	topic := data["topic"]
+	// 防范SQL注入
+	if topic != "hall" {
+		if !topicIdReg.MatchString(data["topic"]) {
+			log.Println("topic非法:", data["topic"])
+			return
+		}
+	}
 
-	onlineUser[userName] = conn
-	defer delete(onlineUser, userName)
+	log.Println("["+topic+"]+:", userName)
+	defer log.Println("["+topic+"]+:", userName)
+
+	if _, ok := onlineUser[topic]; !ok {
+		onlineUser[topic] = make(map[string]*websocket.Conn)
+	}
+	onlineUser[topic][userName] = conn
+	defer delete(onlineUser[topic], userName)
 
 	err = conn.WriteMessage(websocket.TextMessage, []byte(`{"error":false}`))
 	if err != nil {
@@ -223,7 +233,7 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = sendHistory(conn, data["topic"], data["lastMsgID"])
+	err = sendHistory(conn, topic, data["lastMsgID"])
 	if err != nil {
 		log.Println(err)
 		return
@@ -252,21 +262,13 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 
 		switch data["type"] {
 		case "msg":
-			log.Println(userName, "msg:", data["value"])
-
-			// 防范SQL注入
-			if data["topic"] != "hall" {
-				if !topicIdReg.MatchString(data["topic"]) {
-					log.Println("topic非法:", data["topic"])
-					return
-				}
-			}
+			log.Println("["+topic+"]:", userName, "msg:", data["value"])
 
 			id := newID()
 			t := time.Now().Format("2006-01-02 15:04:05")
 
 			_, err := db.Exec(`
-				INSERT INTO `+data["topic"]+` (id, user, value, time)
+				INSERT INTO `+topic+` (id, user, value, time)
 				VALUES                        (?,  ?,    ?,     ?   )`,
 				id, userName, data["value"], t)
 			if err != nil {
@@ -278,7 +280,6 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 				"id":     id,
 				"name":   userName,
 				"msg":    data["value"],
-				"topic":  data["topic"],
 				"time":   t,
 				"avatar": "https://avatars.githubusercontent.com/" + userName + "?s=48",
 			}
@@ -289,7 +290,7 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			for _, c := range onlineUser {
+			for _, c := range onlineUser[topic] {
 				err = c.WriteMessage(websocket.TextMessage, byt)
 				if err != nil {
 					log.Println(err)
@@ -297,9 +298,9 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 				}
 			}
 		case "star":
-			log.Println(userName, "star:", data["id"])
+			log.Println("["+topic+"]:", userName, "star:", data["id"])
 		case "unstar":
-			log.Println(userName, "unstar:", data["id"])
+			log.Println("["+topic+"]:", userName, "unstar:", data["id"])
 		default:
 			log.Println(data)
 		}
