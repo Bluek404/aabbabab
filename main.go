@@ -45,7 +45,16 @@ var host, dsn string
 func init() {
 	flag.StringVar(&host, "host", ":8084", "")
 	flag.StringVar(&dsn, "dsn", "user:password@tcp(127.0.0.1:3306)/aabbabab?charset=utf8", "MySQL Data Source Name")
+	var docker = flag.Bool("docker", false, "use docker?")
 	flag.Parse()
+
+	if *docker {
+		user := os.Getenv("MYSQL_USERNAME")
+		password := os.Getenv("MYSQL_PASSWORD")
+		dbName := os.Getenv("MYSQL_INSTANCE_NAME")
+		address := os.Getenv("MYSQL_PORT_3306_TCP_ADDR") + ":" + os.Getenv("MYSQL_PORT_3306_TCP_PORT")
+		dsn = user + ":" + password + "@tcp(" + address + ")/" + dbName + "?charset=utf8"
+	}
 
 	err := initDB()
 	if err != nil {
