@@ -2,24 +2,25 @@ package main
 
 import (
 	"database/sql"
-	"log"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
 var db *sql.DB
 
-func init() {
+func initDB() error {
 	var err error
 	db, err = sql.Open("mysql", dsn)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	err = createTopic("hall")
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+
+	return nil
 }
 
 func createTopic(name string) error {

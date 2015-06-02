@@ -28,6 +28,7 @@
 package main
 
 import (
+	"flag"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -36,12 +37,21 @@ import (
 	"time"
 )
 
-const (
-	host = ":8084"
-	dsn  = "user:password@tcp(127.0.0.1:3306)/aabbabab?charset=utf8"
-	// 大厅中显示的消息记录数量
-	hallHistoryNum = 50
-)
+// 大厅中显示的消息记录数量
+const hallHistoryNum = 50
+
+var host, dsn string
+
+func init() {
+	flag.StringVar(&host, "host", ":8084", "")
+	flag.StringVar(&dsn, "dsn", "user:password@tcp(127.0.0.1:3306)/aabbabab?charset=utf8", "MySQL Data Source Name")
+	flag.Parse()
+
+	err := initDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
 func initRouter() http.Handler {
 	staticFiles := make(map[string][]byte)
