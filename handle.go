@@ -220,8 +220,8 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 
 	// TODO: 从数据库中检查 topic 是否真实存在
 
-	log.Println("["+topic+"]+:", userName)
-	defer log.Println("["+topic+"]+:", userName)
+	log.Println("["+topic+"]+:", userName, "lastMsgID:", data["lastMsgID"])
+	defer log.Println("["+topic+"]-:", userName)
 
 	if _, ok := onlineUser[topic]; !ok {
 		onlineUser[topic] = make(map[string]*websocket.Conn)
@@ -243,7 +243,7 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 
 	insMsgStmt, err := db.Prepare(`
 				INSERT INTO ` + topic + ` (id, user, value, time)
-				VALUES                        (?,  ?,    ?,     ?   )`)
+				VALUES                    (?,  ?,    ?,     ?   )`)
 	if err != nil {
 		log.Println(err)
 		return
@@ -272,6 +272,11 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 
 		// TODO: 新建 topic 的 API
 		switch data["type"] {
+		case "new":
+			log.Println(data)
+			sendJson(conn, map[string]string{
+				"id": "hall",
+			})
 		case "msg":
 			log.Println("["+topic+"]:", userName, "msg:", data["value"])
 

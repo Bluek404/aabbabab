@@ -1,7 +1,7 @@
 var wsUrl = document.location.protocol === "https:" ? "wss:" : "ws:" + "//" + document.location.host + "/ws";
 var socket;
 
-var topic = document.location.hash === "" ? "hall" : document.location.hash;
+var topic = document.location.hash === "" ? "hall" : document.location.hash.substr(1);
 
 window.onload = function() {
     document.getElementById("inputName").focus();
@@ -42,7 +42,7 @@ function login() {
     var name = document.getElementById("inputName").value;
     var submit = document.getElementById("submitName");
     if (!/^\w{3,16}$/.test(name)) {
-        alert("用户名必须为字母和数字，长度大于等于3小于等于16");
+        alert("用户名必须为字母和数字，长度不能小于3或大于16");
         submit.disabled = false;
         return;
     }
@@ -159,10 +159,98 @@ function onMsg(e) {
         content.scrollTop = content.scrollHeight;
 }
 
+var msgHistory = new Map();
+
+function openTopic(topicID) {
+    var msgBox = document.getElementById("messages");
+    msgHistory[topic] = msgBox.innerHTML;
+    msgBox.innerHTML = "";
+    topic = topicID;
+    document.location.hash = "#" + topic;
+    socket.onclose = null;
+    socket.close();
+    login();
+}
+
+function showPreviewBox(editTab, previewTab, editBox, previewBox) {
+    previewTab.disabled = true;
+    editTab.disabled = false;
+    editBox.style.display = "none";
+    previewBox.style.display = "inline-block";
+    previewBox.innerHTML = marked(editBox.value);
+
+    highlightAll(previewBox);
+}
+
+function showEditBox(editTab, previewTab, editBox, previewBox) {
+    editTab.disabled = true;
+    previewTab.disabled = false;
+    previewBox.style.display = "none";
+    editBox.style.display = "inline-block";
+}
+
+function initNewTopicBox() {
+    var nEditTab = document.getElementById("n-edit");
+    var nEditBox = document.getElementById("n-edit-box");
+    var nPreviewTab = document.getElementById("n-prev");
+    var nPreviewBox = document.getElementById("n-prev-box");
+
+    nPreviewTab.onclick = function () {
+        showPreviewBox(nEditTab, nPreviewTab, nEditBox, nPreviewBox);
+    };
+
+    nEditTab.onclick = function () {
+        showEditBox(nEditTab, nPreviewTab, nEditBox, nPreviewBox);
+    };
+
+    var submitBtn = document.getElementById("n-subm");
+    var title = document.getElementById("n-title");
+
+    title.oninput = function(e) {
+        var len = title.value.length;
+        if (len < 5) {
+            submitBtn.textContent= "标题过短";
+            submitBtn.disabled = true;
+        } else if (len > 50) {
+            submitBtn.textContent= "标题过长";
+            submitBtn.disabled = true;
+        } else {
+            submitBtn.textContent= "发布";
+            submitBtn.disabled = false;
+        }
+    };
+
+    submitBtn.onclick = function(e) {
+        submitBtn.disabled = true;
+        submitBtn.textContent= "发布中……";
+        socket.send(JSON.stringify({
+            "type": "new",
+            "title": title.value,
+            "content": nEditBox.value,
+        }));
+        socket.onmessage = function(e) {
+            submitBtn.textContent= "发布";
+            title.value = "";
+            nEditBox.value = "";
+            nPreviewBox.innerHTML = "";
+            nEditTab.click();
+            document.getElementById("new-topic-box").parentElement.click();
+            var id = JSON.parse(e.data)["id"];
+            openTopic(id);
+        };
+    };
+}
+
 function init() {
     marked.setOptions({
         sanitize: true
     });
+
+    var msgBox = document.getElementById("messages");
+    if (msgBox.innerHTML == "" && msgHistory[topic] != null) {
+        // 恢复消息记录
+        msgBox.innerHTML = msgHistory[topic];
+    }
 
     var submitBtn = document.getElementById("submit");
     var input = document.getElementById("input");
@@ -224,19 +312,12 @@ function init() {
     };
 
     previewTab.onclick = function () {
-        previewTab.disabled = true;
-        editTab.disabled = false;
-        input.style.display = "none";
-        previewBox.style.display = "inline-block";
-        previewBox.innerHTML = marked(input.value);
-
-        highlightAll(previewBox);
+        showPreviewBox(editTab, previewTab, input, previewBox);
     };
 
     editTab.onclick = function () {
-        editTab.disabled = true;
-        previewTab.disabled = false;
-        previewBox.style.display = "none";
-        input.style.display = "inline-block";
+        showEditBox(editTab, previewTab, input, previewBox);
     };
+
+    initNewTopicBox();
 }
