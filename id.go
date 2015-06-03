@@ -29,3 +29,5 @@ func strIdAdd(src string, i uint64) string {
 	}
 	return result
 }
+
+func incID(id string) string { return strIdAdd(id, 1) }

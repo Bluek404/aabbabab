@@ -46,7 +46,7 @@ func sendJson(conn *websocket.Conn, msg interface{}) error {
 // 因为大厅中消息众多
 // 所以只发送最新 hallHistoryNum 条消息记录
 func sendHallHistory(conn *websocket.Conn, lastMsgID string) error {
-	rows, err := db.Query(`SELECT * FROM hall ORDER BY time DESC`)
+	rows, err := db.Query(`SELECT * FROM t_hall ORDER BY time DESC`)
 	if err != nil {
 		return err
 	}
@@ -124,7 +124,7 @@ func sendHistory(conn *websocket.Conn, topic, lastMsgID string) error {
 		return sendHallHistory(conn, lastMsgID)
 	}
 
-	rows, err := db.Query(`SELECT * FROM ` + topic + ` ORDER BY time`)
+	rows, err := db.Query(`SELECT * FROM t_` + topic + ` ORDER BY time`)
 	if err != nil {
 		return err
 	}
@@ -242,8 +242,22 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	insMsgStmt, err := db.Prepare(`
-				INSERT INTO ` + topic + ` (id, user, value, time)
-				VALUES                    (?,  ?,    ?,     ?   )`)
+		INSERT INTO t_` + topic + ` (id, user, value, time)
+		VALUES                      (?,  ?,    ?,     ?   )`)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	insTopicStmt, err := db.Prepare(`
+		INSERT INTO topics (id, title, author, modified)
+		VALUES             (?,  ?,     ?,      ?       )`)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	upLastIdStmt, err := db.Prepare(`UPDATE lastID SET id = ? WHERE id = ?`)
 	if err != nil {
 		log.Println(err)
 		return
@@ -273,9 +287,46 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 		// TODO: 新建 topic 的 API
 		switch data["type"] {
 		case "new":
-			log.Println(data)
+			if l := (data["title"]); l > 5 || l < 50 {
+				log.Println("标题长度非法:", data["title"])
+				return
+			}
+
+			var lastID string
+			err = db.QueryRow(`SELECT id FROM lastID`).Scan(&lastID)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			id := incID(lastID)
+			_, err = upLastIdStmt.Exec(id, lastID)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			t := time.Now().Format("2006-01-02 15:04:05")
+			_, err = insTopicStmt.Exec(id, data["title"], userName, t)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			err = createTopic(id)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			if data["content"] != "" {
+				_, err = db.Exec(`
+					INSERT INTO t_`+id+` (id, user, value, time)
+					VALUES               (?,  ?,    ?,     ?   )`,
+					newRandID(), userName, data["content"], t)
+			}
+
 			sendJson(conn, map[string]string{
-				"id": "hall",
+				"id": id,
 			})
 		case "msg":
 			log.Println("["+topic+"]:", userName, "msg:", data["value"])
