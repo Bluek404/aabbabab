@@ -34,6 +34,16 @@ window.onload = function() {
     };
 };
 
+function initTitle(title, author, time) {
+    var titleBox = document.getElementById("title");
+    if (topic !== "hall") {
+        titleBox.innerHTML = "<h1>" + title + "</h1><p>作者: " + author +
+        "   时间: " + time + "</p>";
+    } else {
+        titleBox.innerHTML = "<h1>" + title + "</h1>";
+    }
+}
+
 var lastMsgID = new Map();
 
 function login() {
@@ -61,7 +71,8 @@ function login() {
     };
 
     socket.onmessage = function (e) {
-        if (JSON.parse(e.data)["error"]) {
+        var data = JSON.parse(e.data);
+        if (data["error"]) {
             alert("name already exists");
             socket.close();
             submit.disabled = false;
@@ -72,6 +83,7 @@ function login() {
                 }
             };
         } else {
+            initTitle(data["title"], data["author"], data["time"]);
             init();
             document.getElementById("init").style.display = "none";
         }

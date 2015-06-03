@@ -276,3 +276,21 @@ blockquote {
 #n-subm {
 	float: right;
 }
+
+#title {
+	height: 48px;
+	width: 100%;
+	color: white;
+	background-color: lightsalmon;
+	display: inline-table;
+}
+
+#title h1 {
+	margin: 0;
+	font-size: 26px;
+}
+
+#title p {
+	margin: 0;
+	float: right;
+}

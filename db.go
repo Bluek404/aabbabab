@@ -24,9 +24,9 @@ func initDB() error {
 	if err != nil {
 		return err
 	}
-	row := db.QueryRow(`SELECT COUNT(*) FROM lastID`)
+
 	var l int
-	err = row.Scan(&l)
+	err = db.QueryRow(`SELECT COUNT(*) FROM lastID`).Scan(&l)
 	if err != nil {
 		return err
 	}
@@ -42,6 +42,7 @@ func initDB() error {
 			id       char(8)     NOT NULL,
 			title    varchar(50) NOT NULL,
 			author   varchar(16) NOT NULL,
+			time     datetime    NOT NULL,
 			modified datetime    NOT NULL)`)
 	if err != nil {
 		return err

@@ -209,16 +209,27 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var title, author, topicTime string
 	topic := data["topic"]
-	// 防范SQL注入
 	if topic != "hall" {
+		// 防范SQL注入
 		if !topicIdReg.MatchString(data["topic"]) {
 			log.Println("topic非法:", data["topic"])
 			return
 		}
+		// 从数据库中检查 topic 是否存在
+		// 顺便获取 topic 信息
+		err = db.QueryRow(`SELECT title, author ,time FROM topics WHERE id=?`, topic).
+			Scan(&title, &author, &topicTime)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+	} else {
+		title = "大厅"
+		author = "系统"
+		topicTime = "2006-01-02 15:04:05"
 	}
-
-	// TODO: 从数据库中检查 topic 是否真实存在
 
 	log.Println("["+topic+"]+:", userName, "lastMsgID:", data["lastMsgID"])
 	defer log.Println("["+topic+"]-:", userName)
@@ -229,7 +240,12 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 	onlineUser[topic][userName] = conn
 	defer delete(onlineUser[topic], userName)
 
-	err = conn.WriteMessage(websocket.TextMessage, []byte(`{"error":false}`))
+	err = sendJson(conn, map[string]interface{}{
+		"error":  false,
+		"title":  title,
+		"author": author,
+		"time":   topicTime,
+	})
 	if err != nil {
 		log.Println(err)
 		return
@@ -250,8 +266,8 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	insTopicStmt, err := db.Prepare(`
-		INSERT INTO topics (id, title, author, modified)
-		VALUES             (?,  ?,     ?,      ?       )`)
+		INSERT INTO topics (id, title, author, time, modified)
+		VALUES             (?,  ?,     ?,      ?,    ?       )`)
 	if err != nil {
 		log.Println(err)
 		return
@@ -284,10 +300,9 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// TODO: 新建 topic 的 API
 		switch data["type"] {
 		case "new":
-			if l := (data["title"]); l > 5 || l < 50 {
+			if l := len(data["title"]); l < 5 || l > 50 {
 				log.Println("标题长度非法:", data["title"])
 				return
 			}
@@ -306,7 +321,7 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 			}
 
 			t := time.Now().Format("2006-01-02 15:04:05")
-			_, err = insTopicStmt.Exec(id, data["title"], userName, t)
+			_, err = insTopicStmt.Exec(id, data["title"], userName, t, t)
 			if err != nil {
 				log.Println(err)
 				return
