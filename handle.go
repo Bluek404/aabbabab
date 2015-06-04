@@ -295,7 +295,7 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 	for {
 		messageType, p, err = conn.ReadMessage()
 		if err != nil {
-			if err != io.EOF || err != io.ErrUnexpectedEOF {
+			if err != io.EOF && err != io.ErrUnexpectedEOF {
 				log.Println(err)
 			}
 			return
