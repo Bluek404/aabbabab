@@ -286,6 +286,12 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	upModTimeStmt, err := db.Prepare(`UPDATE topics SET modified = ? WHERE id = ?`)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
 	getTopicListStmt, err := db.Prepare(`SELECT id, title, author, time FROM topics ORDER BY modified DESC`)
 	if err != nil {
 		log.Println(err)
@@ -415,8 +421,13 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 			id := newRandID()
 			t := time.Now().Format("2006-01-02 15:04:05")
 
-			_, err := insMsgStmt.Exec(
-				id, userName, data["value"], t)
+			_, err = insMsgStmt.Exec(id, userName, data["value"], t)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			_, err = upModTimeStmt.Exec(t, topic)
 			if err != nil {
 				log.Println(err)
 				return

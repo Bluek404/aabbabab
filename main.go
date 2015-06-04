@@ -101,7 +101,7 @@ func (router *router) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		if ok {
 			switch {
 			case r.RequestURI[len(r.RequestURI)-3:] == ".js":
-				rw.Header().Set("Content-Type", "application/x-javascript")
+				rw.Header().Set("Content-Type", "text/javascript")
 			case r.RequestURI[len(r.RequestURI)-4:] == ".css":
 				rw.Header().Set("Content-Type", "text/css")
 			}
