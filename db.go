@@ -49,14 +49,8 @@ func createTopic(name string) error {
 	return nil
 }
 
-func initDB() error {
-	var err error
-	db, err = sql.Open("mysql", dsn)
-	if err != nil {
-		return err
-	}
-
-	err = createTopic("hall")
+func initTable() error {
+	err := createTopic("hall")
 	if err != nil {
 		return err
 	}
@@ -89,5 +83,25 @@ func initDB() error {
 		return err
 	}
 
-	return initStmt()
+	return nil
+}
+
+func initDB() error {
+	var err error
+	db, err = sql.Open("mysql", dsn)
+	if err != nil {
+		return err
+	}
+
+	err = initTable()
+	if err != nil {
+		return err
+	}
+
+	err = initStmt()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
