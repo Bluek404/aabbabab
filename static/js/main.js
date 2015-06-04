@@ -294,6 +294,11 @@ function init() {
     if (msgBox.innerHTML == "" && msgHistory[topic] != null) {
         // 恢复消息记录
         msgBox.innerHTML = msgHistory[topic];
+        var messages = document.getElementsByClassName("msg");
+        for (var i=0, l=messages.length; i< l; i++) {
+            var msg = messages[i];
+            initStar(msg);
+        }
     }
 
     var submitBtn = document.getElementById("submit");
