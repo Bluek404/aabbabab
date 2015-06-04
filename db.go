@@ -8,6 +8,47 @@ import (
 
 var db *sql.DB
 
+var insTopicStmt, upLastIdStmt, upModTimeStmt, getTopicListStmt *sql.Stmt
+
+func initStmt() (err error) {
+	insTopicStmt, err = db.Prepare(`
+		INSERT INTO topics (id, title, author, time, modified)
+		VALUES             (?,  ?,     ?,      ?,    ?       )`)
+	if err != nil {
+		return err
+	}
+
+	upLastIdStmt, err = db.Prepare(`UPDATE lastID SET id = ? WHERE id = ?`)
+	if err != nil {
+		return err
+	}
+
+	upModTimeStmt, err = db.Prepare(`UPDATE topics SET modified = ? WHERE id = ?`)
+	if err != nil {
+		return err
+	}
+
+	getTopicListStmt, err = db.Prepare(`SELECT id, title, author, time FROM topics ORDER BY modified DESC`)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func createTopic(name string) error {
+	_, err := db.Exec(`
+		CREATE TABLE IF NOT EXISTS t_` + name + `(
+			id    char(16)      NOT NULL,
+			user  varchar(16)   NOT NULL,
+			value varchar(2048) NOT NULL,
+			time  datetime      NOT NULL)`)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func initDB() error {
 	var err error
 	db, err = sql.Open("mysql", dsn)
@@ -48,18 +89,5 @@ func initDB() error {
 		return err
 	}
 
-	return nil
-}
-
-func createTopic(name string) error {
-	_, err := db.Exec(`
-		CREATE TABLE IF NOT EXISTS t_` + name + `(
-			id    char(16)      NOT NULL,
-			user  varchar(16)   NOT NULL,
-			value varchar(2048) NOT NULL,
-			time  datetime      NOT NULL)`)
-	if err != nil {
-		return err
-	}
-	return nil
+	return initStmt()
 }

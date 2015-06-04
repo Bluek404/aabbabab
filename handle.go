@@ -272,32 +272,6 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	insTopicStmt, err := db.Prepare(`
-		INSERT INTO topics (id, title, author, time, modified)
-		VALUES             (?,  ?,     ?,      ?,    ?       )`)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	upLastIdStmt, err := db.Prepare(`UPDATE lastID SET id = ? WHERE id = ?`)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	upModTimeStmt, err := db.Prepare(`UPDATE topics SET modified = ? WHERE id = ?`)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	getTopicListStmt, err := db.Prepare(`SELECT id, title, author, time FROM topics ORDER BY modified DESC`)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
 	for {
 		messageType, p, err = conn.ReadMessage()
 		if err != nil {
