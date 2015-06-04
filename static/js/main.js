@@ -172,7 +172,6 @@ function onMsg(e) {
         content.scrollTop = content.scrollHeight;
         break;
     case "getList":
-        console.log(data);
         var topicList = document.getElementById("topic-list");
         var list = "";
         for (var i=0; i < data["topics"].length; i++) {

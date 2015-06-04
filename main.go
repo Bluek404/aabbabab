@@ -99,6 +99,12 @@ func (router *router) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	default:
 		v, ok := router.staticFiles[r.RequestURI]
 		if ok {
+			switch {
+			case r.RequestURI[len(r.RequestURI)-3:] == ".js":
+				rw.Header().Set("Content-Type", "application/x-javascript")
+			case r.RequestURI[len(r.RequestURI)-4:] == ".css":
+				rw.Header().Set("Content-Type", "text/css")
+			}
 			rw.Write(v)
 			return
 		}
@@ -107,7 +113,6 @@ func (router *router) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	log.SetFlags(log.Lshortfile)
 	log.Println("Running on", host)
 	err := http.ListenAndServe(host, initRouter())
 	if err != nil {
