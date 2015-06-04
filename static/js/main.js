@@ -141,8 +141,7 @@ function remStar(msgElem, star) {
     initStar(msgElem);
 }
 
-function genMsg(jsonData) {
-    var data = JSON.parse(jsonData);
+function genMsg(data) {
     var msg = document.createElement("div");
 
     msg.id = data["id"];
@@ -162,18 +161,51 @@ function genMsg(jsonData) {
 }
 
 function onMsg(e) {
-        console.log(e.data);
+    var data = JSON.parse(e.data);
+    switch (data["type"]) {
+    case "msg":
         var msgBox = document.getElementById("messages");
         var content = document.getElementById("content");
 
-        msgBox.appendChild(genMsg(e.data));
+        msgBox.appendChild(genMsg(data));
         // 滚动到底部
         content.scrollTop = content.scrollHeight;
+        break;
+    case "getList":
+        console.log(data);
+        var topicList = document.getElementById("topic-list");
+        var list = "";
+        for (var i=0; i < data["topics"].length; i++) {
+            var topicInfo = data["topics"][i];
+            list += '<div onclick="openTopic(\'' + topicInfo["id"] + '\')">' +
+                "</p>" + topicInfo["title"] + "</p><p>作者: " + topicInfo["author"] +
+                " 时间: " + topicInfo["time"] + "</p></div>";
+        }
+        topicList.innerHTML = list;
+        break;
+    case "new":
+        var nEditTab = document.getElementById("n-edit");
+        var nEditBox = document.getElementById("n-edit-box");
+        var nPreviewBox = document.getElementById("n-prev-box");
+        var submitBtn = document.getElementById("n-subm");
+        var title = document.getElementById("n-title");
+        submitBtn.textContent= "发布";
+        title.value = "";
+        nEditBox.value = "";
+        nPreviewBox.innerHTML = "";
+        nEditTab.click();
+        document.getElementById("new-topic-box").parentElement.click();
+        openTopic(data["id"]);
+        break;
+    }
 }
 
 var msgHistory = new Map();
 
 function openTopic(topicID) {
+    if (topicID === topic) {
+        return;
+    }
     var msgBox = document.getElementById("messages");
     msgHistory[topic] = msgBox.innerHTML;
     msgBox.innerHTML = "";
@@ -240,17 +272,17 @@ function initNewTopicBox() {
             "title": title.value,
             "content": nEditBox.value,
         }));
-        socket.onmessage = function(e) {
-            submitBtn.textContent= "发布";
-            title.value = "";
-            nEditBox.value = "";
-            nPreviewBox.innerHTML = "";
-            nEditTab.click();
-            document.getElementById("new-topic-box").parentElement.click();
-            var id = JSON.parse(e.data)["id"];
-            openTopic(id);
-        };
     };
+}
+
+var topicListPage;
+
+function getTopicList(page) {
+    topicListPage = page;
+    socket.send(JSON.stringify({
+        "type": "getList",
+        "page": String(page),
+    }));
 }
 
 function init() {
@@ -332,4 +364,5 @@ function init() {
     };
 
     initNewTopicBox();
+    getTopicList(1);
 }

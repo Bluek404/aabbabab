@@ -11,6 +11,7 @@ import (
 	"github.com/Bluek404/aabbabab/tpl"
 
 	"github.com/gorilla/websocket"
+	"strconv"
 )
 
 var (
@@ -60,6 +61,7 @@ func sendHallHistory(conn *websocket.Conn, lastMsgID string) error {
 			return err
 		}
 		msg := map[string]string{
+			"type":   "msg",
 			"id":     id,
 			"name":   user,
 			"msg":    value,
@@ -151,6 +153,7 @@ func sendHistory(conn *websocket.Conn, topic, lastMsgID string) error {
 			continue
 		}
 		msg := map[string]string{
+			"type":   "msg",
 			"id":     id,
 			"name":   user,
 			"msg":    value,
@@ -202,7 +205,10 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 	}
 	_, ok := onlineUser[userName]
 	if ok {
-		err = conn.WriteMessage(websocket.TextMessage, []byte(`{"error":true}`))
+		err = sendJson(conn, map[string]interface{}{
+			"type":  "login",
+			"error": true,
+		})
 		if err != nil {
 			log.Println(err)
 		}
@@ -231,8 +237,8 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 		topicTime = "2006-01-02 15:04:05"
 	}
 
-	log.Println("["+topic+"]+:", userName, "lastMsgID:", data["lastMsgID"])
-	defer log.Println("["+topic+"]-:", userName)
+	log.Println("["+topic+"]join:", userName, "lastMsgID:", data["lastMsgID"])
+	defer log.Println("["+topic+"]leave:", userName)
 
 	if _, ok := onlineUser[topic]; !ok {
 		onlineUser[topic] = make(map[string]*websocket.Conn)
@@ -241,6 +247,7 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 	defer delete(onlineUser[topic], userName)
 
 	err = sendJson(conn, map[string]interface{}{
+		"type":   "login",
 		"error":  false,
 		"title":  title,
 		"author": author,
@@ -279,6 +286,12 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	getTopicListStmt, err := db.Prepare(`SELECT id, title, author, time FROM topics ORDER BY modified DESC`)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
 	for {
 		messageType, p, err = conn.ReadMessage()
 		if err != nil {
@@ -302,6 +315,8 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 
 		switch data["type"] {
 		case "new":
+			log.Println("["+topic+"]new:", userName, "title:", data["title"])
+
 			if l := len(data["title"]); l < 5 || l > 50 {
 				log.Println("标题长度非法:", data["title"])
 				return
@@ -341,10 +356,61 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 			}
 
 			sendJson(conn, map[string]string{
-				"id": id,
+				"type": "new",
+				"id":   id,
 			})
+		case "getList":
+			log.Println("["+topic+"]getList:", userName, "page:", data["page"])
+
+			page, err := strconv.Atoi(data["page"])
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			const topicNum = 50
+			rows, err := getTopicListStmt.Query()
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			defer rows.Close()
+
+			topicList := make([]map[string]string, 0, topicNum)
+
+			var display bool
+			begin := (page - 1) * topicNum
+			end := page * topicNum
+			for i := 0; i < end && rows.Next(); i++ {
+				if i == begin {
+					display = true
+				}
+				if !display {
+					continue
+				}
+				var id, title, author, time string
+				err = rows.Scan(&id, &title, &author, &time)
+				if err != nil {
+					log.Println(err)
+					return
+				}
+				topicList = append(topicList, map[string]string{
+					"id":     id,
+					"title":  title,
+					"author": author,
+					"time":   time,
+				})
+			}
+
+			err = sendJson(conn, map[string]interface{}{
+				"type":   "getList",
+				"topics": topicList,
+			})
+			if err != nil {
+				log.Println(err)
+				return
+			}
 		case "msg":
-			log.Println("["+topic+"]:", userName, "msg:", data["value"])
+			log.Println("["+topic+"]msg:", userName, "value:", data["value"])
 
 			id := newRandID()
 			t := time.Now().Format("2006-01-02 15:04:05")
@@ -357,6 +423,7 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 			}
 
 			msg := map[string]string{
+				"type":   "msg",
 				"id":     id,
 				"name":   userName,
 				"msg":    data["value"],
@@ -378,9 +445,9 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 				}
 			}
 		case "star":
-			log.Println("["+topic+"]:", userName, "star:", data["id"])
+			log.Println("["+topic+"]star:", userName, "id:", data["id"])
 		case "unstar":
-			log.Println("["+topic+"]:", userName, "unstar:", data["id"])
+			log.Println("["+topic+"]unstar:", userName, "id:", data["id"])
 		default:
 			log.Println(data)
 		}

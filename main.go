@@ -107,6 +107,7 @@ func (router *router) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	log.SetFlags(log.Lshortfile)
 	log.Println("Running on", host)
 	err := http.ListenAndServe(host, initRouter())
 	if err != nil {
