@@ -297,7 +297,7 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 		case "new":
 			log.Println("["+topic+"]new:", userName, "title:", data["title"])
 
-			if l := len(data["title"]); l < 5 || l > 50 {
+			if l := len([]rune(data["title"])); l < 5 || l > 50 {
 				log.Println("标题长度非法:", data["title"])
 				return
 			}
