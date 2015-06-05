@@ -396,4 +396,10 @@ function init() {
     pageRefreshBtn.onclick = function(e) {
         getTopicList(topicListPage);
     };
+    pageRefreshBtn.onmouseenter = function(e) {
+        pageRefreshBtn.innerText = "刷新";
+    };
+    pageRefreshBtn.onmouseleave = function(e) {
+        pageRefreshBtn.innerText = String(topicListPage);
+    };
 }
