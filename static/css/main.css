@@ -39,7 +39,7 @@ blockquote {
 
 #sidebar-content {
     top: 48px;
-    bottom: 0;
+    bottom: 48px;
 	position: absolute;
 	width: 100%;
     overflow: auto;
@@ -292,5 +292,30 @@ blockquote {
 
 #title p {
 	margin: 0;
+	float: right;
+}
+
+.pager {
+	height: 48px;
+	width: 100%;
+	background-color: palevioletred;
+	position: absolute;
+	bottom: 0;
+}
+
+.pager p {
+	text-align: center;
+	margin: 10px;
+}
+
+.pager button {
+	height: 28px;
+}
+
+#page-prev {
+	float: left;
+}
+
+#page-next {
 	float: right;
 }

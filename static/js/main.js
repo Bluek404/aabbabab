@@ -277,6 +277,9 @@ function initNewTopicBox() {
 var topicListPage;
 
 function getTopicList(page) {
+    if (topicListPage < 1) {
+        return;
+    }
     topicListPage = page;
     socket.send(JSON.stringify({
         "type": "getList",
@@ -369,4 +372,28 @@ function init() {
 
     initNewTopicBox();
     getTopicList(1);
+
+    var pagePrevBtn = document.getElementById("page-prev");
+    var pageRefreshBtn = document.getElementById("page-num");
+    var pageNextBtn = document.getElementById("page-next");
+
+    pagePrevBtn.onclick = function(e) {
+        getTopicList(topicListPage - 1);
+        if (topicListPage <= 1) {
+            pagePrevBtn.disabled = true;
+        }
+        pageRefreshBtn.innerText = String(topicListPage);
+    };
+
+    pageNextBtn.onclick = function(e) {
+        getTopicList(topicListPage + 1);
+        if (topicListPage > 1) {
+            pagePrevBtn.disabled = false;
+        }
+        pageRefreshBtn.innerText = String(topicListPage);
+    };
+
+    pageRefreshBtn.onclick = function(e) {
+        getTopicList(topicListPage);
+    };
 }
