@@ -91,6 +91,7 @@ blockquote {
 	color: white;
 	background: #304ffe;
 	padding: 6px 12px;
+	cursor: pointer;
 }
 
 .button:hover {
@@ -318,4 +319,23 @@ blockquote {
 
 #page-next {
 	float: right;
+}
+
+.topic {
+	cursor: pointer;
+	background-color: rebeccapurple;
+	color: white;
+	padding: 5px 0;
+	margin-bottom: 1px;
+	font-size: small;
+	overflow: auto;
+}
+
+.topic:last-child {
+	margin-bottom: 0; 
+}
+
+.topic .title {
+	font-weight: bold;
+	font-size: initial;
 }

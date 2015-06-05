@@ -176,8 +176,8 @@ function onMsg(e) {
         var list = "";
         for (var i=0; i < data["topics"].length; i++) {
             var topicInfo = data["topics"][i];
-            list += '<div onclick="openTopic(\'' + topicInfo["id"] + '\')">' +
-                "</p>" + topicInfo["title"] + "</p><p>作者: " + topicInfo["author"] +
+            list += '<div class="topic" onclick="openTopic(\'' + topicInfo["id"] + '\')">' +
+                "<p class=\"title\">" + topicInfo["title"] + "</p><p>作者: " + topicInfo["author"] +
                 " 时间: " + topicInfo["time"] + "</p></div>";
         }
         topicList.innerHTML = list;
