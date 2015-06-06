@@ -274,7 +274,7 @@ function initNewTopicBox() {
     };
 }
 
-var topicListPage;
+var topicListPage =1;
 
 function getTopicList(page) {
     if (topicListPage < 1) {
@@ -371,7 +371,7 @@ function init() {
     };
 
     initNewTopicBox();
-    getTopicList(1);
+    getTopicList(topicListPage);
 
     var pagePrevBtn = document.getElementById("page-prev");
     var pageRefreshBtn = document.getElementById("page-num");
