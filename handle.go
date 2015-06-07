@@ -6,16 +6,17 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"strconv"
 	"time"
 
+	"github.com/Bluek404/aabbabab/syncmap"
 	"github.com/Bluek404/aabbabab/tpl"
 
 	"github.com/gorilla/websocket"
-	"strconv"
 )
 
 var (
-	onlineUser = make(map[string]map[string]*websocket.Conn)
+	onlineUser = syncmap.New()
 
 	// Websocket Upgrader
 	upgrader = websocket.Upgrader{
@@ -203,7 +204,15 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 		log.Println("用户名非法:", userName)
 		return
 	}
-	_, ok := onlineUser[userName]
+
+	topic := data["topic"]
+	m, ok := onlineUser.Get(topic)
+	if !ok {
+		m = syncmap.New()
+		onlineUser.Set(topic, m)
+	}
+	topicOlList := m.(*syncmap.SyncMap)
+	_, ok = topicOlList.Get(userName)
 	if ok {
 		err = sendJson(conn, map[string]interface{}{
 			"type":  "login",
@@ -216,7 +225,6 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	var title, author, topicTime string
-	topic := data["topic"]
 	if topic != "hall" {
 		// 防范SQL注入
 		if !topicIdReg.MatchString(data["topic"]) {
@@ -239,12 +247,13 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 
 	log.Println("["+topic+"]join:", userName, "lastMsgID:", data["lastMsgID"])
 	defer log.Println("["+topic+"]leave:", userName)
-
-	if _, ok := onlineUser[topic]; !ok {
-		onlineUser[topic] = make(map[string]*websocket.Conn)
-	}
-	onlineUser[topic][userName] = conn
-	defer delete(onlineUser[topic], userName)
+	topicOlList.Set(userName, conn)
+	defer func() {
+		topicOlList.Delete(userName)
+		if topicOlList.Size() == 0 {
+			onlineUser.Delete(topic)
+		}
+	}()
 
 	err = sendJson(conn, map[string]interface{}{
 		"type":   "login",
@@ -422,7 +431,8 @@ func wsMain(rw http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			for _, c := range onlineUser[topic] {
+			for item := range topicOlList.IterItems() {
+				c := item.Value.(*websocket.Conn)
 				err = c.WriteMessage(websocket.TextMessage, byt)
 				if err != nil {
 					log.Println(err)
